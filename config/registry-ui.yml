@@ -1,0 +1,65 @@
+version: '3.2'
+services:
+  registry-ui:
+    image: docker.io/joxit/docker-registry-ui:latest
+    networks:
+      - traefik-public
+    environment:
+      - REGISTRY_URL=https://leo.erwijet.com
+      - DELETE_IMAGES=true
+      - SINGLE_REGISTRY=true
+      - SHOW_CONTENT_DIGEST=true
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        
+        # http redirection config
+        - traefik.http.routers.registry-ui-http.rule=Host(`reg-ui.erwijet.com`)
+        - traefik.http.routers.registry-ui-http.entrypoints=http
+        - traefik.http.routers.registry-ui-http.middlewares=https-redirect
+        
+        # https config
+        - traefik.http.routers.registry-ui-https.rule=Host(`reg-ui.erwijet.com`)
+        - traefik.http.routers.registry-ui-https.entrypoints=https
+        - traefik.http.routers.registry-ui-https.tls=true
+        - traefik.http.routers.registry-ui-https.tls.certresolver=le
+        
+        # load-balencer config
+        - traefik.http.services.registry-ui.loadbalancer.server.port=80
+  bagelbot-registry-ui:
+    image: docker.io/joxit/docker-registry-ui:latest
+    networks:
+      - traefik-public
+    environment:
+      - REGISTRY_URL=https://bagelbot.registry.erwijet.com
+      - DELETE_IMAGES=true
+      - SINGLE_REGISTRY=true
+      - SHOW_CONTENT_DIGEST=true
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        
+        # http redirection config
+        - traefik.http.routers.bagelbot-registry-ui-http.rule=Host(`bagelbot.registry-ui.erwijet.com`)
+        - traefik.http.routers.bagelbot-registry-ui-http.entrypoints=http
+        - traefik.http.routers.bagelbot-registry-ui-http.middlewares=https-redirect
+        
+        # https config
+        - traefik.http.routers.bagelbot-registry-ui-https.rule=Host(`bagelbot.registry-ui.erwijet.com`)
+        - traefik.http.routers.bagelbot-registry-ui-https.entrypoints=https
+        - traefik.http.routers.bagelbot-registry-ui-https.tls=true
+        - traefik.http.routers.bagelbot-registry-ui-https.tls.certresolver=le
+        
+        # load-balencer config
+        - traefik.http.services.bagelbot-registry-ui.loadbalancer.server.port=80
+networks:
+  traefik-public:
+    external: true

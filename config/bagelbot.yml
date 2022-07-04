@@ -1,0 +1,30 @@
+version: '3.2'
+services:
+  bagelbot:
+    image: bagelbot.registry.erwijet.com/api:latest
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 2
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+
+        # http redirection config
+        - traefik.http.routers.bagelbot-http.rule=Host(`bagelbot.erwijet.com`)
+        - traefik.http.routers.bagelbot-http.entrypoints=http
+        - traefik.http.routers.bagelbot-http.middlewares=https-redirect
+
+        # https config
+        - traefik.http.routers.bagelbot-https.rule=Host(`bagelbot.erwijet.com`)
+        - traefik.http.routers.bagelbot-https.entrypoints=https
+        - traefik.http.routers.bagelbot-https.tls=true
+        - traefik.http.routers.bagelbot-https.tls.certresolver=le
+
+        # load-balencer config
+        - traefik.http.services.bagelbot.loadbalancer.server.port=8080
+networks:
+  traefik-public:
+    external: true

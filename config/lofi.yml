@@ -1,0 +1,33 @@
+version: '3.2'
+services:
+  lofi:
+    image: registry.erwijet.com/lofi:latest
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.4'
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        
+        # http redirection config
+        - traefik.http.routers.lofi-http.rule=Host(`lofi.erwijet.com`)
+        - traefik.http.routers.lofi-http.entrypoints=http
+        - traefik.http.routers.lofi-http.middlewares=https-redirect
+        
+        # https config
+        - traefik.http.routers.lofi-https.rule=Host(`lofi.erwijet.com`)
+        - traefik.http.routers.lofi-https.entrypoints=https
+        - traefik.http.routers.lofi-https.tls=true
+        - traefik.http.routers.lofi-https.tls.certresolver=le
+        
+        # load-balencer config
+        - traefik.http.services.lofi.loadbalancer.server.port=8080
+networks:
+  traefik-public:
+    external: true
